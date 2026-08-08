@@ -4,3 +4,7 @@
 my-report.md
 __pycache__/
 .DS_Store
+
+# Ephemeris data downloaded at runtime by jyotishganit/skyfield
+*.bsp
+hip_main.dat

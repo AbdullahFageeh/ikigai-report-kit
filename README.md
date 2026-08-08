@@ -8,6 +8,7 @@ This is the toolkit, not a finished report. You supply your own results; it does
 
 - A **54-lens report template** grouped by evidence quality, so you always know which rows are measured and which are inferred.
 - **Chart maths done properly** — Swiss Ephemeris, not lookup tables: natal positions, lunar nodes, the Vedic D10 career chart, your solar return, and astrocartography lines.
+- **Dasha timing** — which Vimshottari period you are in *right now*, down to the sub-sub-period, with the timeline of what comes next.
 - **Numerology calculators** for Life Path, Expression / Soul Urge / Personality, and Arabic Abjad values.
 - A **print-quality PDF** via pandoc plus any Chromium-based browser you already have.
 
@@ -80,8 +81,10 @@ You need:
 ```bash
 brew install pandoc poppler          # macOS; poppler is optional, for PDF checks
 python3 -m venv .venv
-.venv/bin/pip install pyswisseph
+.venv/bin/pip install pyswisseph jyotishganit
 ```
+
+`jyotishganit` downloads about 17 MB of NASA JPL ephemeris data the first time it runs.
 
 You also need one Chromium-based browser. The build script auto-detects Chrome, Chromium, Brave, Edge, Opera and Opera GX.
 
@@ -93,12 +96,23 @@ You also need one Chromium-based browser. The build script auto-detects Chrome, 
   --date 1990-01-15 --time 14:30 --tz +3 \
   --lat 21.4858 --lon 39.1925 --solar-year 2026
 
+# Dasha: which Vimshottari period you are in right now
+.venv/bin/python scripts/dasha.py \
+  --date 1990-01-15 --time 14:30 --tz +3 \
+  --lat 21.4858 --lon 39.1925
+
 # Numerology: Life Path, Expression / Soul / Personality, Abjad
 python3 scripts/numerology.py \
   --dob 1990-01-15 \
   --name-en "Your Full Name" \
   --name-ar "اسمك الكامل"
 ```
+
+`dasha.py` prints your current mahadasha, antardasha and pratyantardasha with
+percentages elapsed, then the full antardasha timeline inside the current
+mahadasha. Pass `--as-of YYYY-MM-DD` to check any other date, or `--json` for
+machine-readable output. This is the most decision-relevant output in the kit:
+it tells you which years favour building quietly and which favour launching.
 
 ## Step 5 — Write and build
 
@@ -125,6 +139,15 @@ The template uses a few small conventions the stylesheet understands:
 - Numerology, astrology, Human Design, Gene Keys, BaZi, Cardology and the Destiny Matrix have no predictive validity. They are in the template because a structured mirror can be genuinely useful for reflection — not because they are true. Keep them in Group B and say so in your report.
 - The value of a report like this is **convergence plus a decision**. Fifty lenses agreeing is interesting; a shortlist you can act on is the point. Do not skip the scoring section.
 
+## Credits
+
+- [jyotishganit](https://github.com/northtara/jyotishganit) (MIT) — Vimshottari dasha periods and Vedic chart computation, using NASA JPL DE421 ephemeris data.
+- [pyswisseph](https://github.com/astrorigin/pyswisseph) — Python bindings for the Swiss Ephemeris, used by `chart.py`.
+
+Worth knowing about related projects: [kerykeion](https://github.com/g-battaglia/kerykeion) is the most mature Python astrology library and produces SVG charts and aspect grids. It is **AGPL-3.0**, so this MIT-licensed kit does not depend on it — but if you are building something AGPL-compatible, use it instead of `chart.py`.
+
 ## Licence
 
-MIT. Do what you like with it. No warranty, and nothing here is medical, psychological or financial advice.
+This kit is MIT. Do what you like with it. No warranty, and nothing here is medical, psychological or financial advice.
+
+**One caveat on dependencies.** The Swiss Ephemeris behind `pyswisseph` is dual-licensed: AGPL-3.0, or a paid commercial licence from Astrodienst. This repo does not bundle or redistribute it — you install it yourself — but if you plan to ship something closed-source built on `chart.py`, check that licence first. `scripts/dasha.py` and `scripts/numerology.py` have no such constraint: jyotishganit is MIT, and the numerology script has no dependencies at all.
