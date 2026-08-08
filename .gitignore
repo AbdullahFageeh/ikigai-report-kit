@@ -1,0 +1,6 @@
+.venv/
+.build.html
+*.pdf
+my-report.md
+__pycache__/
+.DS_Store
