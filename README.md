@@ -75,6 +75,17 @@ You need:
 - **Your full legal name**, in English and — if applicable — in Arabic script.
 - **Your test results** from Step 1.
 
+### Getting `--tz` right, wherever you were born
+
+Every script takes `--tz` as the **UTC offset in force at your birth moment**, not your country's offset today. This is the single most common way these calculations go wrong for people outside the example.
+
+- If daylight saving was active on your birth date, include it: e.g. British Summer Time is `--tz +1`, not `+0`.
+- Some countries changed zone entirely at some point. Check what applied on the *date*, not what applies now.
+- Places on a half-hour or quarter-hour offset are fine: `--tz +5.5`, `--tz +5.75`, `--tz -3.5`.
+- West of Greenwich is negative for both `--tz` and `--lon`.
+
+If you are unsure, run `chart.py` twice an hour apart. If nothing you care about changes, the ambiguity does not matter for your report — and if it does, that is worth knowing before you build on it.
+
 ## Step 3 — Install the tools
 
 ```bash
@@ -100,8 +111,8 @@ You also need one Chromium-based browser. The build script auto-detects Chrome, 
 ```bash
 # Chart: natal, nodes, D10 career chart, solar return, astrocartography
 .venv/bin/python scripts/chart.py \
-  --date 1990-01-15 --time 14:30 --tz +3 \
-  --lat 21.4858 --lon 39.1925 --solar-year 2026
+  --date 1990-01-15 --time 14:30 --tz +0 \
+  --lat 51.4779 --lon -0.0015 --solar-year 2026
 
 # Numerology: Life Path, Expression / Soul / Personality, Abjad
 python3 scripts/numerology.py \
@@ -111,8 +122,8 @@ python3 scripts/numerology.py \
 
 # Extended systems: Chinese Zodiac / BaZi, Human Design, Gene Keys, Destiny Matrix
 .venv/bin/python scripts/extended_systems.py \
-  --date 1990-01-15 --time 14:30 --tz +3 \
-  --lat 21.4858 --lon 39.1925
+  --date 1990-01-15 --time 14:30 --tz +0 \
+  --lat 51.4779 --lon -0.0015
 ```
 
 ## Step 5 — Write and build

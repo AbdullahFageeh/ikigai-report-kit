@@ -1,5 +1,5 @@
-/* Ikigai Report — V1 visual style
-   Colours sampled from Ikigai_Report_Abdullah_Fageeh_V1.pdf */
+/* Ikigai Report Kit — print stylesheet
+   A4, teal/navy palette, tuned for pandoc + headless Chromium output */
 
 @page {
   size: A4;

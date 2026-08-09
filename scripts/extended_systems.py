@@ -14,8 +14,8 @@ Dependencies:
 
 Example:
   python scripts/extended_systems.py \
-    --date 1986-07-06 --time 13:15 --tz +3 \
-    --lat 21.4858 --lon 39.1925
+    --date 1990-01-15 --time 14:30 --tz +0 \
+    --lat 51.4779 --lon -0.0015
 """
 from __future__ import annotations
 
@@ -597,8 +597,10 @@ def main() -> None:
     ap.add_argument("--date", required=True, help="birth date, YYYY-MM-DD")
     ap.add_argument("--time", required=True, help="birth time, HH:MM (24h)")
     ap.add_argument("--tz", required=True, type=float, help="UTC offset at birth, e.g. +3")
-    ap.add_argument("--lat", required=True, type=float, help="latitude (kept for output consistency)")
-    ap.add_argument("--lon", required=True, type=float, help="longitude (kept for output consistency)")
+    ap.add_argument("--lat", type=float, default=None,
+                    help="latitude, north positive (optional; recorded in output only)")
+    ap.add_argument("--lon", type=float, default=None,
+                    help="longitude, east positive (optional; recorded in output only)")
     ap.add_argument("--json", action="store_true", help="print JSON instead of pretty text")
     args = ap.parse_args()
 
