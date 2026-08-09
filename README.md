@@ -76,15 +76,37 @@ You need:
 - **Your full legal name**, in English and — if applicable — in Arabic script.
 - **Your test results** from Step 1.
 
+### Getting `--tz` right, wherever you were born
+
+Every script takes `--tz` as the **UTC offset in force at your birth moment**, not your country's offset today. This is the single most common way these calculations go wrong for people outside the example.
+
+- If daylight saving was active on your birth date, include it: e.g. British Summer Time is `--tz +1`, not `+0`.
+- Some countries changed zone entirely at some point. Check what applied on the *date*, not what applies now.
+- Places on a half-hour or quarter-hour offset are fine: `--tz +5.5`, `--tz +5.75`, `--tz -3.5`.
+- West of Greenwich is negative for both `--tz` and `--lon`.
+
+If you are unsure, run `chart.py` twice an hour apart. If nothing you care about changes, the ambiguity does not matter for your report — and if it does, that is worth knowing before you build on it.
+
 ## Step 3 — Install the tools
 
 ```bash
 brew install pandoc poppler          # macOS; poppler is optional, for PDF checks
 python3 -m venv .venv
-.venv/bin/pip install pyswisseph jyotishganit
+.venv/bin/pip install ephem          # required for scripts/extended_systems.py
+.venv/bin/pip install pyswisseph     # required for scripts/chart.py
+.venv/bin/pip install jyotishganit   # required for scripts/dasha.py
 ```
 
 `jyotishganit` downloads about 17 MB of NASA JPL ephemeris data the first time it runs.
+
+### Method choices used in `extended_systems.py`
+
+To keep outputs stable and reproducible, the script uses explicit fixed methods:
+
+- **Chinese Zodiac / BaZi**: Li Chun year boundary (fixed Feb 4 local), fixed solar-month boundaries, 1900-01-31 as Jia-Zi day reference.
+- **Human Design**: PyEphem geocentric longitudes, 88° solar arc for Design timestamp, fixed Rave Mandala sequence for gate/line mapping, mean lunar-node model.
+- **Gene Keys**: direct mapping from Human Design activations (Gene Key number = gate number), Activation Sequence from Sun/Earth in personality/design.
+- **Destiny Matrix**: deterministic Matrix of Destiny 22 digit-reduction model (core + derived points).
 
 You also need one Chromium-based browser. The build script auto-detects Chrome, Chromium, Brave, Edge, Opera and Opera GX.
 
@@ -93,19 +115,24 @@ You also need one Chromium-based browser. The build script auto-detects Chrome, 
 ```bash
 # Chart: natal, nodes, D10 career chart, solar return, astrocartography
 .venv/bin/python scripts/chart.py \
-  --date 1990-01-15 --time 14:30 --tz +3 \
-  --lat 21.4858 --lon 39.1925 --solar-year 2026
+  --date 1990-01-15 --time 14:30 --tz +0 \
+  --lat 51.4779 --lon -0.0015 --solar-year 2026
 
 # Dasha: which Vimshottari period you are in right now
 .venv/bin/python scripts/dasha.py \
-  --date 1990-01-15 --time 14:30 --tz +3 \
-  --lat 21.4858 --lon 39.1925
+  --date 1990-01-15 --time 14:30 --tz +0 \
+  --lat 51.4779 --lon -0.0015
 
 # Numerology: Life Path, Expression / Soul / Personality, Abjad
 python3 scripts/numerology.py \
   --dob 1990-01-15 \
   --name-en "Your Full Name" \
   --name-ar "اسمك الكامل"
+
+# Extended systems: Chinese Zodiac / BaZi, Human Design, Gene Keys, Destiny Matrix
+.venv/bin/python scripts/extended_systems.py \
+  --date 1990-01-15 --time 14:30 --tz +0 \
+  --lat 51.4779 --lon -0.0015
 ```
 
 `dasha.py` prints your current mahadasha, antardasha and pratyantardasha with

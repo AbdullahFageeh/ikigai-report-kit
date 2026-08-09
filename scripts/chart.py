@@ -14,8 +14,8 @@ Computes, from a birth date/time/place:
 Requires: pip install pyswisseph
 
 Example:
-  python chart.py --date 1990-01-15 --time 14:30 --tz +3 \
-                  --lat 21.4858 --lon 39.1925 --solar-year 2026
+  python chart.py --date 1990-01-15 --time 14:30 --tz +0 \
+                  --lat 51.4779 --lon -0.0015 --solar-year 2026
 """
 from __future__ import annotations
 
