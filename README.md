@@ -80,8 +80,18 @@ You need:
 ```bash
 brew install pandoc poppler          # macOS; poppler is optional, for PDF checks
 python3 -m venv .venv
-.venv/bin/pip install pyswisseph
+.venv/bin/pip install ephem          # required for scripts/extended_systems.py
+.venv/bin/pip install pyswisseph     # optional; needed for scripts/chart.py
 ```
+
+### Method choices used in `extended_systems.py`
+
+To keep outputs stable and reproducible, the script uses explicit fixed methods:
+
+- **Chinese Zodiac / BaZi**: Li Chun year boundary (fixed Feb 4 local), fixed solar-month boundaries, 1900-01-31 as Jia-Zi day reference.
+- **Human Design**: PyEphem geocentric longitudes, 88° solar arc for Design timestamp, fixed Rave Mandala sequence for gate/line mapping, mean lunar-node model.
+- **Gene Keys**: direct mapping from Human Design activations (Gene Key number = gate number), Activation Sequence from Sun/Earth in personality/design.
+- **Destiny Matrix**: deterministic Matrix of Destiny 22 digit-reduction model (core + derived points).
 
 You also need one Chromium-based browser. The build script auto-detects Chrome, Chromium, Brave, Edge, Opera and Opera GX.
 
@@ -98,6 +108,11 @@ python3 scripts/numerology.py \
   --dob 1990-01-15 \
   --name-en "Your Full Name" \
   --name-ar "اسمك الكامل"
+
+# Extended systems: Chinese Zodiac / BaZi, Human Design, Gene Keys, Destiny Matrix
+.venv/bin/python scripts/extended_systems.py \
+  --date 1990-01-15 --time 14:30 --tz +3 \
+  --lat 21.4858 --lon 39.1925
 ```
 
 ## Step 5 — Write and build
