@@ -16,8 +16,8 @@ Requires: pip install jyotishganit
 (The first run downloads ~17 MB of ephemeris data.)
 
 Example:
-  python dasha.py --date 1990-01-15 --time 14:30 --tz +3 \
-                  --lat 21.4858 --lon 39.1925
+  python dasha.py --date 1990-01-15 --time 14:30 --tz +0 \
+                  --lat 51.4779 --lon -0.0015
 """
 from __future__ import annotations
 
