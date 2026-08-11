@@ -179,6 +179,18 @@ The template uses a few small conventions the stylesheet understands:
 - Numerology, astrology, Human Design, Gene Keys, BaZi, Cardology and the Destiny Matrix have no predictive validity. They are in the template because a structured mirror can be genuinely useful for reflection — not because they are true. Keep them in Group B and say so in your report.
 - The value of a report like this is **convergence plus a decision**. Fifty lenses agreeing is interesting; a shortlist you can act on is the point. Do not skip the scoring section.
 
+## Running the tests
+
+```bash
+.venv/bin/python tests/test_kit.py             # full suite
+.venv/bin/python tests/test_kit.py --offline   # skip the ephemeris download
+```
+
+No pytest needed. Checks that need `pyswisseph`, `ephem` or `jyotishganit` skip
+themselves cleanly if the package is missing, so a partial install still gives
+you a useful run. Exit code is non-zero only on a real failure; the known issues
+below are reported every run but never fail the suite.
+
 ## Accuracy status
 
 What has been cross-checked, and what has not. Read this before trusting a number.

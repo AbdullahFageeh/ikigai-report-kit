@@ -8,3 +8,6 @@ __pycache__/
 # Ephemeris data downloaded at runtime by jyotishganit/skyfield
 *.bsp
 hip_main.dat
+
+# Partial ephemeris downloads (skyfield leaves these behind if interrupted)
+*.download
