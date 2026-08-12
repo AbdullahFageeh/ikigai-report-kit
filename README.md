@@ -4,6 +4,12 @@ Build a personal, multi-system Ikigai report as a clean PDF — from free online
 
 This is the toolkit, not a finished report. You supply your own results; it does the calculation, layout and PDF export.
 
+## See it before you build it
+
+[`examples/example-report.pdf`](examples/example-report.pdf) is a complete 9-page report produced by this kit, with its source at [`examples/example-report.md`](examples/example-report.md).
+
+It uses a neutral birth chart (Royal Observatory, Greenwich, 15 January 1990) and invented test scores. Every charted value in it — nodes, D10, dasha periods, BaZi pillars, Human Design, numerology — is genuine output from the scripts in `scripts/`. Only the Group A test results are made up, and the report says so on its own first page.
+
 ## What you get
 
 - A **54-lens report template** grouped by evidence quality, so you always know which rows are measured and which are inferred.
@@ -25,6 +31,7 @@ This is the toolkit, not a finished report. You supply your own results; it does
 | `ikigai.css` | Print stylesheet: A4, callouts, table styling |
 | `build.sh` | Markdown → PDF via pandoc and headless Chromium |
 | `tests/test_kit.py` | Test suite; runs on plain Python, no pytest required |
+| `examples/` | A complete worked example: filled report and its built PDF |
 
 ## Why group by evidence quality
 

@@ -11,3 +11,6 @@ hip_main.dat
 
 # Partial ephemeris downloads (skyfield leaves these behind if interrupted)
 *.download
+
+# ...but the worked example PDF is committed on purpose
+!examples/*.pdf
