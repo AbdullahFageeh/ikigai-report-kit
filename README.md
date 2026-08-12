@@ -24,6 +24,7 @@ This is the toolkit, not a finished report. You supply your own results; it does
 | `template/report-template.md` | The report skeleton, grouped by evidence quality |
 | `ikigai.css` | Print stylesheet: A4, callouts, table styling |
 | `build.sh` | Markdown → PDF via pandoc and headless Chromium |
+| `tests/test_kit.py` | Test suite; runs on plain Python, no pytest required |
 
 ## Why group by evidence quality
 
