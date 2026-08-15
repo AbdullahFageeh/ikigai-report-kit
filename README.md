@@ -1,232 +1,147 @@
 # Ikigai Report Kit
 
-Build a personal, multi-system Ikigai report as a clean PDF — from free online tests plus your birth data.
+Generate a **reproducible, evidence-aware personal calculation report** from four inputs: full name, birth date, local birth time, and birth place. The generator calculates every deterministic system currently implemented in this repository, then adds verified psychometric or wellbeing results only when the recipient provides them.
 
-This is the toolkit, not a finished report. You supply your own results; it does the calculation, layout and PDF export.
+> **Birth data can calculate chart and name systems. It cannot truthfully calculate personality, diagnosis, values, skills, mental health, or vocation.**
 
-## See it before you build it
+That distinction is built into the output. Calculated systems appear as **Group B**, supplied test results appear as **Group A**, and anything not measured is left unclaimed with optional test links at the end.
 
-[`examples/example-report.pdf`](examples/example-report.pdf) is a complete 9-page report produced by this kit, with its source at [`examples/example-report.md`](examples/example-report.md).
+## The one-command workflow
 
-It uses a neutral birth chart (Royal Observatory, Greenwich, 15 January 1990) and invented test scores. Every charted value in it — nodes, D10, dasha periods, BaZi pillars, Human Design, numerology — is genuine output from the scripts in `scripts/`. Only the Group A test results are made up, and the report says so on its own first page.
+```bash
+python3 scripts/generate_report.py \
+  --name "Alex Example" \
+  --date 1990-01-15 --time 14:30 \
+  --place "Greenwich, London, United Kingdom" \
+  --out alex-example-report.md \
+  --data-out alex-example-calculations.json
+```
 
-## What you get
+The generator resolves the place to coordinates, identifies its time zone, calculates the historical UTC offset for the supplied birth date, produces a report-ready Markdown file, and can also save the raw calculations as JSON.
 
-- A **54-lens report template** grouped by evidence quality, so you always know which rows are measured and which are inferred.
-- **Chart maths done properly** — Swiss Ephemeris, not lookup tables: natal positions, lunar nodes, the Vedic D10 career chart, your solar return, and astrocartography lines.
-- **Dasha timing** — which Vimshottari period you are in *right now*, down to the sub-sub-period, with the timeline of what comes next.
-- **Symbolic systems computed, not looked up** — Chinese Zodiac and BaZi four pillars, Human Design type/profile/centers, Gene Keys activation sequence, and a Destiny Matrix reduction.
-- **Numerology calculators** for Life Path, Expression / Soul Urge / Personality, and Arabic Abjad values.
-- A **print-quality PDF** via pandoc plus any Chromium-based browser you already have.
-
-## What's in the repo
-
-| Path | What it does |
-|---|---|
-| `scripts/chart.py` | Western + Vedic chart: positions, nodes, houses, D10, solar return, astrocartography |
-| `scripts/dasha.py` | Current Vimshottari mahadasha / antardasha / pratyantardasha and the timeline ahead |
-| `scripts/extended_systems.py` | BaZi, Human Design, Gene Keys, Destiny Matrix |
-| `scripts/numerology.py` | Life Path, Expression / Soul Urge / Personality, Abjad |
-| `template/report-template.md` | The report skeleton, grouped by evidence quality |
-| `ikigai.css` | Print stylesheet: A4, callouts, table styling |
-| `build.sh` | Markdown → PDF via pandoc and headless Chromium |
-| `tests/test_kit.py` | Test suite; runs on plain Python, no pytest required |
-| `examples/` | A complete worked example: filled report and its built PDF |
-
-## Why group by evidence quality
-
-Most reports of this kind mix a validated personality inventory with a tarot spread and present both in the same confident voice. This template does not. Every row sits in one of three groups:
-
-| Group | Meaning | How much to trust it |
+| Required input | Example | Why it matters |
 |---|---|---|
-| **A. Measured** | You sat the test. Real instrument, real score. | Strongest |
-| **B. Charted** | Calculated from your birth data or name. Internally consistent; not scientifically validated. | Symbolic mirror |
-| **C. Inferred** | Not separately tested — derived from A and B. | Working hypothesis |
+| Full name in Latin script | `Alex Example` | Pythagorean name numerology |
+| Birth date | `1990-01-15` | All date-based systems |
+| Local birth time | `14:30` | Houses, Ascendant, Human Design, divisional charts and timing |
+| Birth place | `Greenwich, London, United Kingdom` | Coordinates and historical time-zone rule |
 
-Keep the labels. They are the difference between a useful document and a horoscope.
+Add `--name-ar "اسم عربي كامل"` when an Arabic-script name is available. This adds the Abjad calculation; it is otherwise omitted cleanly.
 
-## Step 1 — Take the tests
+## What the generator calculates today
 
-All free, all online. Start with the seven priority ones; the rest are optional depth.
+| Input basis | Calculated systems | Report treatment |
+|---|---|---|
+| Birth date + name | Life Path, Personal Year, Expression, Soul Urge and Personality numbers; Abjad when Arabic name is supplied | Symbolic, reproducible calculation |
+| Birth date + time + place | Tropical natal positions, Ascendant, Midheaven, lunar nodes, birth-time sensitivity, solar return and MC/IC astrocartography lines | Symbolic, reproducible calculation |
+| Birth date + time + place | Sidereal Lahiri positions and nakshatra/pada, D10 career-chart positions, Vimshottari dasha timing | Symbolic, reproducible calculation |
+| Birth date + time | Chinese zodiac, BaZi pillars, Human Design type/profile/centres/channels, Gene Keys Activation Sequence, Destiny Matrix 22 reduction | Symbolic, reproducible calculation |
 
-### Priority
+The generator contains all the systems the current code can calculate. It does **not** pretend to calculate systems that are not implemented, such as Mayan Tzolkin, Nine Star Ki, full Ascendant/Descendant astrocartography curves, a full Gene Keys Golden Path, or professionally administered psychological assessments.
 
-| Test | What it gives you | Time | Link |
-|---|---|---|---|
-| 16Personalities | MBTI-style type (e.g. INFP-T) | 12 min | https://www.16personalities.com/free-personality-test |
-| VIA Character Strengths | Ranked 24 character strengths | 15 min | https://www.viacharacter.org/survey/account/register |
-| Big Five (IPIP-BFFM) | Five factors **with facet scores** | 15 min | https://openpsychometrics.org/tests/IPIP-BFFM/ |
-| Enneagram | Type, and ideally wing | 10 min | https://www.truity.com/test/enneagram-personality-test |
-| HEXACO-60 | Adds Honesty–Humility, which Big Five omits | 10 min | https://hexaco.org/hexaco-online |
-| Grit Scale (Duckworth, official) | Perseverance and consistency of interest | 2 min | https://www.angeladuckworth.com/grit |
-| ECR-R | Attachment style, measured rather than guessed | 10 min | https://openpsychometrics.org/tests/ECR.php |
+## What is optional: real test results
 
-### Recommended
+Psychometric, vocational-interest and wellbeing results are **optional additions**, not requirements. If a recipient has results, give them in a JSON file using [`examples/test-results.example.json`](examples/test-results.example.json) as the shape:
 
-| Test | What it gives you | Time | Link |
-|---|---|---|---|
-| ADHD self-report (ASRS v1.1) | Executive-function baseline | 5 min | https://add.org/adhd-test/ |
-| MEQ chronotype | Your real deep-work window | 5 min | https://chronotype-self-test.info/ |
-| Burnout self-check | A number you can re-measure each quarter | 5 min | https://www.mindtools.com/ap5f8ab/burnout-self-test |
-| Enneagram, second opinion | Cross-check your type | 10 min | https://similarminds.com/embj.html |
+```bash
+python3 scripts/generate_report.py \
+  --name "Alex Example" \
+  --date 1990-01-15 --time 14:30 \
+  --place "Greenwich, London, United Kingdom" \
+  --tests examples/test-results.example.json \
+  --out alex-example-report.md
+```
 
-### Backup links
-
-If any of the above is unreachable:
-
-| Test | Alternative |
+| If the recipient provides… | The report does… |
 |---|---|
-| ADHD ASRS | https://psychology-tools.com/test/adult-adhd-self-report-scale |
-| Attachment (Fraley's original ECR) | http://www.web-research-design.net/cgi-bin/crq/crq.pl |
-| Grit Scale | https://psytests.org/emvol/griten.html |
-| IPIP item bank (build your own) | https://ipip.ori.org/ |
+| A verified result in `tests.json` | Adds it to **Group A — supplied measurements** with the supplied source note. |
+| No result | Leaves the construct unclaimed and lists the relevant test link in **Measurement links**. |
+| A result from a test not in the standard list | Includes it as an additional supplied measurement without treating it as birth-data output. |
 
-### Reading, not tests
+The standard optional links cover Big Five, HEXACO, VIA Character Strengths, Enneagram, RIASEC, Grit, ECR-R, ASRS-v1.1, chronotype, Copenhagen Burnout Inventory, and the Work Design Questionnaire. An ASRS result is always described as a screening/support-planning baseline—not a diagnosis.
 
-- Enneagram instinctual variants — https://www.enneagraminstitute.com/enneagram-instinctual-variants/
-
-### Chart systems you do not need to pay for
-
-Human Design, Gene Keys and BaZi charts are free to generate online, and `scripts/chart.py` in this repo computes the Western, Vedic, D10, solar-return and astrocartography data directly.
-
-## Step 2 — Gather your inputs
-
-You need:
-
-- **Birth date, time and place.** Time matters. An hour of error moves your Ascendant a whole sign; `chart.py` prints the exact minute your Ascendant changes sign so you can see how sensitive your chart is.
-- **Your full legal name**, in English and — if applicable — in Arabic script.
-- **Your test results** from Step 1.
-
-### Getting `--tz` right, wherever you were born
-
-Every script takes `--tz` as the **UTC offset in force at your birth moment**, not your country's offset today. This is the single most common way these calculations go wrong for people outside the example.
-
-- If daylight saving was active on your birth date, include it: e.g. British Summer Time is `--tz +1`, not `+0`.
-- Some countries changed zone entirely at some point. Check what applied on the *date*, not what applies now.
-- Places on a half-hour or quarter-hour offset are fine: `--tz +5.5`, `--tz +5.75`, `--tz -3.5`.
-- West of Greenwich is negative for both `--tz` and `--lon`.
-
-If you are unsure, run `chart.py` twice an hour apart. If nothing you care about changes, the ambiguity does not matter for your report — and if it does, that is worth knowing before you build on it.
-
-## Step 3 — Install the tools
+## Install once
 
 ```bash
-brew install pandoc poppler          # macOS; poppler is optional, for PDF checks
 python3 -m venv .venv
-.venv/bin/pip install ephem          # required for scripts/extended_systems.py
-.venv/bin/pip install pyswisseph     # required for scripts/chart.py
-.venv/bin/pip install jyotishganit   # required for scripts/dasha.py
+.venv/bin/pip install -r requirements.txt
 ```
 
-`jyotishganit` downloads about 17 MB of NASA JPL ephemeris data the first time it runs.
-
-### Method choices used in `extended_systems.py`
-
-To keep outputs stable and reproducible, the script uses explicit fixed methods:
-
-- **Chinese Zodiac / BaZi**: Li Chun year boundary (fixed Feb 4 local), fixed solar-month boundaries, 1900-01-31 as Jia-Zi day reference.
-- **Human Design**: PyEphem geocentric longitudes, 88° solar arc for Design timestamp, fixed Rave Mandala sequence for gate/line mapping, mean lunar-node model.
-- **Gene Keys**: direct mapping from Human Design activations (Gene Key number = gate number), Activation Sequence from Sun/Earth in personality/design.
-- **Destiny Matrix**: deterministic Matrix of Destiny 22 digit-reduction model (core + derived points).
-
-You also need one Chromium-based browser. The build script auto-detects Chrome, Chromium, Brave, Edge, Opera and Opera GX.
-
-## Step 4 — Run the calculators
+The first Vimshottari dasha run downloads its JPL ephemeris data. To build a PDF as well, install Pandoc and use a Chromium-based browser:
 
 ```bash
-# Chart: natal, nodes, D10 career chart, solar return, astrocartography
-.venv/bin/python scripts/chart.py \
-  --date 1990-01-15 --time 14:30 --tz +0 \
-  --lat 51.4779 --lon -0.0015 --solar-year 2026
-
-# Dasha: which Vimshottari period you are in right now
-.venv/bin/python scripts/dasha.py \
-  --date 1990-01-15 --time 14:30 --tz +0 \
-  --lat 51.4779 --lon -0.0015
-
-# Numerology: Life Path, Expression / Soul / Personality, Abjad
-python3 scripts/numerology.py \
-  --dob 1990-01-15 \
-  --name-en "Your Full Name" \
-  --name-ar "اسمك الكامل"
-
-# Extended systems: Chinese Zodiac / BaZi, Human Design, Gene Keys, Destiny Matrix
-.venv/bin/python scripts/extended_systems.py \
-  --date 1990-01-15 --time 14:30 --tz +0 \
-  --lat 51.4779 --lon -0.0015
+./build.sh alex-example-report.md
 ```
 
-`dasha.py` prints your current mahadasha, antardasha and pratyantardasha with
-percentages elapsed, then the full antardasha timeline inside the current
-mahadasha. Pass `--as-of YYYY-MM-DD` to check any other date, or `--json` for
-machine-readable output. This is the most decision-relevant output in the kit:
-it tells you which years favour building quietly and which favour launching.
-
-## Step 5 — Write and build
+The generator needs internet only when you pass `--place` and want it to resolve coordinates automatically. For an offline or controlled workflow, supply coordinates and an IANA time zone directly:
 
 ```bash
-cp template/report-template.md my-report.md
-# fill in your results, delete what does not apply
-./build.sh my-report.md
-open my-report.pdf
+python3 scripts/generate_report.py \
+  --name "Alex Example" \
+  --date 1990-01-15 --time 14:30 \
+  --lat 51.4779 --lon -0.0015 --timezone Europe/London \
+  --out alex-example-report.md
 ```
 
-## Layout conventions
+## Output files
 
-The template uses a few small conventions the stylesheet understands:
+| File | Purpose |
+|---|---|
+| `report.md` | Clean report source, ready to edit or convert to PDF with `build.sh` |
+| `calculations.json` | Raw calculated data for audit, a web application, or later report expansion |
+| `tests.json` | Optional recipient-supplied test results only; it is never generated from birth data |
 
-- `> A bold one-line takeaway` — renders as the teal callout box. One per section, at the top.
-- `# 4. Section title {.newpage}` — starts the section on a fresh page.
-- `<p class="lede">Italic intro line.</p>` and `<p class="note">Small grey caveat.</p>`
-- `::: wide` … `:::` — shrinks a many-column table so it fits the page.
-- `::: links` … `:::` — shrinks a table of URLs.
+The Markdown output has five parts: input verification, evidence ledger, detailed calculation record, links for uncompleted tests, and clear implementation limitations.
 
-## Honest limitations
+## Inputs and accuracy checks
 
-- Psychometric instruments (Big Five, HEXACO, VIA, RIASEC, Grit) have peer-reviewed research behind them. Their limits are still real: self-report, reference bias, and easy faking.
-- Numerology, astrology, Human Design, Gene Keys, BaZi, Cardology and the Destiny Matrix have no predictive validity. They are in the template because a structured mirror can be genuinely useful for reflection — not because they are true. Keep them in Group B and say so in your report.
-- The value of a report like this is **convergence plus a decision**. Fifty lenses agreeing is interesting; a shortlist you can act on is the point. Do not skip the scoring section.
+Birth time is the sensitive input. The report automatically states whether the Ascendant changes within the next four hours and, if so, gives the transition time. Confirm close calls against an official record before relying on house-dependent, Human Design or divisional-chart output.
 
-## Running the tests
+Place lookup uses the public [OpenStreetMap Nominatim](https://nominatim.openstreetmap.org/) service. Always check the resolved place and coordinates printed in the report. If a place name is ambiguous, rerun with `--lat`, `--lon` and `--timezone`.
+
+## Method boundaries
+
+The report separates **calculated** from **measured** evidence by design. The psychometric tests in the optional appendix have research behind them within their stated limits. Numerology, astrology, Human Design, Gene Keys, BaZi and the Destiny Matrix are reflective systems, not validated predictors of personality, health, future outcomes or career fit.
+
+Technical constraints currently documented in the code still apply:
+
+- Human Design lines can be near-boundary sensitive because of the underlying ephemeris convention, and the channel table is incomplete.
+- The BaZi day-pillar anchor is deterministic but needs independent validation before high-stakes use.
+- The dasha module uses True Chitra Paksha while the chart module’s sidereal output uses Lahiri, so boundary values may differ slightly.
+- MC/IC astrocartography lines are calculated; Ascendant/Descendant curves need a dedicated mapping implementation.
+
+## Developer commands
 
 ```bash
-.venv/bin/python tests/test_kit.py             # full suite
-.venv/bin/python tests/test_kit.py --offline   # skip the ephemeris download
+# Run the repository tests
+.venv/bin/python tests/test_kit.py
+
+# Generate Markdown from a fully specified input
+.venv/bin/python scripts/generate_report.py --help
+
+# Inspect the individual calculation tools
+.venv/bin/python scripts/chart.py --help
+.venv/bin/python scripts/dasha.py --help
+.venv/bin/python scripts/extended_systems.py --help
+.venv/bin/python scripts/numerology.py --help
 ```
 
-No pytest needed. Checks that need `pyswisseph`, `ephem` or `jyotishganit` skip
-themselves cleanly if the package is missing, so a partial install still gives
-you a useful run. Exit code is non-zero only on a real failure; the known issues
-below are reported every run but never fail the suite.
+## Repository map
 
-## Accuracy status
-
-What has been cross-checked, and what has not. Read this before trusting a number.
-
-**Verified against an independent source**
-
-- `chart.py` — positions, nodes, Ascendant/Midheaven, D10 and solar return agree with Swiss Ephemeris to within a rounding minute.
-- `dasha.py` — reproduces jyotishganit's own documented reference chart exactly.
-- `numerology.py` — deterministic arithmetic, no ephemeris involved.
-
-**Known issues in `extended_systems.py`**
-
-- **Human Design lines can be off by one.** `ephem.Ecliptic(body)` returns longitudes referred to J2000 rather than to the date of birth — roughly a +0.09° offset for a 1990s birth. A line spans 0.9375°, so a result flips only when a planet sits within about 0.09° of a line boundary: on the order of one activation in ten. Gates are unaffected. Fix is to pass `epoch=` to `ephem.Ecliptic`.
-- **The channel table has 34 of Human Design's 36 channels** (10-34 and 10-57 are missing), which can misclassify a Generator or Manifesting Generator as a Projector.
-- **The BaZi day-pillar anchor is unvalidated.** It uses 1900-01-31 as a Jia-Zi day; the other common anchor, 1984-02-02, disagrees by 22 days in the 60-day cycle. Validate against a chart you trust before relying on the Day Master.
-
-If you only need one system to be right, use `chart.py` or `dasha.py`.
-
-## Credits
-
-- [jyotishganit](https://github.com/northtara/jyotishganit) (MIT) — Vimshottari dasha periods and Vedic chart computation, using NASA JPL DE421 ephemeris data.
-- [pyswisseph](https://github.com/astrorigin/pyswisseph) — Python bindings for the Swiss Ephemeris, used by `chart.py`.
-- [PyEphem](https://rhodesmill.org/pyephem/) (MIT) — planetary longitudes used by `extended_systems.py`.
-
-Worth knowing about related projects: [kerykeion](https://github.com/g-battaglia/kerykeion) is the most mature Python astrology library and produces SVG charts and aspect grids. It is **AGPL-3.0**, so this MIT-licensed kit does not depend on it — but if you are building something AGPL-compatible, use it instead of `chart.py`.
+| Path | Role |
+|---|---|
+| `scripts/generate_report.py` | Universal generator: input resolution, calculations, optional test-results logic and report rendering |
+| `scripts/chart.py` | Western/Vedic chart, D10, solar return, astrocartography; now also supports `--json` |
+| `scripts/dasha.py` | Current Vimshottari mahadasha and antardasha timing |
+| `scripts/extended_systems.py` | BaZi, Human Design, Gene Keys Activation Sequence and Destiny Matrix |
+| `scripts/numerology.py` | Life Path, Pythagorean name figures and Arabic Abjad |
+| `template/report-template.md` | Long-form human-authored report template for an expanded, curated report |
+| `template/v7-measurement-layer.md` | Optional V7 measurement section for reports with completed WDQ, HEXACO, ASRS and CBI data |
+| `examples/test-results.example.json` | Safe shape for optional verified test inputs |
+| `build.sh` | Markdown-to-PDF build script |
 
 ## Licence
 
-This kit is MIT. Do what you like with it. No warranty, and nothing here is medical, psychological or financial advice.
+MIT. No warranty. This repository is not medical, psychological, legal, financial or clinical advice.
 
-**One caveat on dependencies.** The Swiss Ephemeris behind `pyswisseph` is dual-licensed: AGPL-3.0, or a paid commercial licence from Astrodienst. This repo does not bundle or redistribute it — you install it yourself — but if you plan to ship something closed-source built on `chart.py`, check that licence first. `scripts/dasha.py` and `scripts/numerology.py` have no such constraint: jyotishganit is MIT, and the numerology script has no dependencies at all.
+The Swiss Ephemeris behind `pyswisseph` is dual-licensed: AGPL-3.0 or a paid commercial licence from Astrodienst. This repository does not bundle or redistribute it; check the relevant licence before shipping a closed-source product built on it.

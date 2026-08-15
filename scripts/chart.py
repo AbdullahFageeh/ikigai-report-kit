@@ -20,6 +20,7 @@ Example:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 
 try:
@@ -198,6 +199,135 @@ def astrocartography(jd: float) -> None:
     print("  Ascendant/Descendant lines are latitude-dependent curves and need a mapping tool.")
 
 
+def _position(longitude: float, speed: float | None = None) -> dict:
+    """Return a machine-readable zodiac position."""
+    return {
+        "longitude": round(longitude % 360, 6),
+        "sign": SIGNS[int((longitude % 360) // 30)],
+        "degree_in_sign": round((longitude % 30), 6),
+        "formatted": fmt(longitude),
+        "retrograde": bool(speed is not None and speed < 0),
+    }
+
+
+def _ascendant_sensitivity_data(jd: float, lat: float, lon: float, tz: float) -> dict:
+    """Return the next Ascendant sign change, if it occurs within four hours."""
+    start_sign = int(swe.houses(jd, lat, lon, b"P")[1][0] // 30)
+    lo, hi = jd, jd + (4.0 / 24.0)
+    if int(swe.houses(hi, lat, lon, b"P")[1][0] // 30) == start_sign:
+        return {"start_sign": SIGNS[start_sign], "stable_for_at_least_hours": 4}
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        if int(swe.houses(mid, lat, lon, b"P")[1][0] // 30) == start_sign:
+            lo = mid
+        else:
+            hi = mid
+    _, _, _, ut_hours = swe.revjul((lo + hi) / 2)
+    local = (ut_hours + tz) % 24
+    new_sign = SIGNS[int(swe.houses(hi, lat, lon, b"P")[1][0] // 30)]
+    return {
+        "leaves_sign": SIGNS[start_sign],
+        "enters_sign": new_sign,
+        "local_time": f"{int(local):02d}:{int((local % 1) * 60):02d}",
+    }
+
+
+def _sidereal_data(jd: float, lat: float, lon: float) -> dict:
+    swe.set_sid_mode(swe.SIDM_LAHIRI)
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+    planets = {}
+    for name, code in PLANETS[:7] + [("Rahu", swe.TRUE_NODE)]:
+        pos, _ = swe.calc_ut(jd, code, flags)
+        entry = _position(pos[0], pos[3])
+        entry["nakshatra"] = NAKSHATRAS[int(pos[0] // (360 / 27))]
+        entry["pada"] = int((pos[0] % (360 / 27)) / (360 / 108)) + 1
+        planets[name] = entry
+    _, ascmc = swe.houses_ex(jd, lat, lon, b"P", swe.FLG_SIDEREAL)
+    return {"ayanamsa": "Lahiri", "planets": planets, "ascendant": _position(ascmc[0]), "midheaven": _position(ascmc[1])}
+
+
+def _d10_data(jd: float, lat: float, lon: float) -> dict:
+    swe.set_sid_mode(swe.SIDM_LAHIRI)
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+    _, ascmc = swe.houses_ex(jd, lat, lon, b"P", swe.FLG_SIDEREAL)
+    lagna = d10_sign(ascmc[0])
+    planets = {}
+    for name, code in PLANETS[:7] + [("Rahu", swe.TRUE_NODE)]:
+        pos, _ = swe.calc_ut(jd, code, flags)
+        sign = d10_sign(pos[0])
+        planets[name] = {"sign": SIGNS[sign], "house": ((sign - lagna) % 12) + 1}
+    return {"lagna": SIGNS[lagna], "tenth_house_sign": SIGNS[(lagna + 9) % 12], "planets": planets}
+
+
+def _solar_return_data(jd: float, lat: float, lon: float, tz: float, year: int) -> dict:
+    natal_sun = swe.calc_ut(jd, swe.SUN)[0][0]
+    _, month, day, _ = swe.revjul(jd)
+    lo = swe.julday(year, int(month), int(day), 0) - 2
+    hi = lo + 4
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        if (swe.calc_ut(mid, swe.SUN)[0][0] - natal_sun) % 360 < 180:
+            hi = mid
+        else:
+            lo = mid
+    sr = (lo + hi) / 2
+    y, m, d, ut_hours = swe.revjul(sr)
+    local = (ut_hours + tz) % 24
+    cusps, ascmc = swe.houses(sr, lat, lon, b"P")
+    planets = {}
+    for name, code in PLANETS[:7]:
+        pos, _ = swe.calc_ut(sr, code)
+        entry = _position(pos[0], pos[3])
+        entry["house"] = house_of(pos[0], cusps)
+        planets[name] = entry
+    return {
+        "year": year,
+        "exact_return_local": f"{int(y):04d}-{int(m):02d}-{int(d):02d} {int(local):02d}:{int((local % 1) * 60):02d}",
+        "ascendant": _position(ascmc[0]),
+        "midheaven": _position(ascmc[1]),
+        "natal_sun_house": house_of(natal_sun, cusps),
+        "planets": planets,
+    }
+
+
+def collect_chart(date: str, time: str, tz: float, lat: float, lon: float, solar_year: int | None = None) -> dict:
+    """Collect all chart outputs in a structured form for downstream report generation."""
+    jd = julian_day(date, time, tz)
+    tropical = {}
+    for name, code in PLANETS:
+        pos, _ = swe.calc_ut(jd, code)
+        tropical[name] = _position(pos[0], pos[3])
+    try:
+        chiron, _ = swe.calc_ut(jd, swe.CHIRON)
+        tropical["Chiron"] = _position(chiron[0], chiron[3])
+    except swe.Error:
+        tropical["Chiron"] = {"available": False, "note": "Asteroid ephemeris file unavailable"}
+    cusps, ascmc = swe.houses(jd, lat, lon, b"P")
+    north, _ = swe.calc_ut(jd, swe.TRUE_NODE)
+    south_longitude = (north[0] + 180) % 360
+    nodes = {"north": _position(north[0], north[3]), "south": _position(south_longitude)}
+    nodes["north"]["house"] = house_of(north[0], cusps)
+    nodes["south"]["house"] = house_of(south_longitude, cusps)
+    astro = {}
+    gmst_deg = swe.sidtime(jd) * 15.0
+    for name, code in PLANETS[:7]:
+        ra = swe.calc_ut(jd, code, swe.FLG_SWIEPH | swe.FLG_EQUATORIAL)[0][0]
+        mc = ((ra - gmst_deg + 180) % 360) - 180
+        ic = ((mc + 360) % 360) - 180
+        astro[name] = {"mc_longitude": round(mc, 3), "ic_longitude": round(ic, 3)}
+    result = {
+        "input": {"date": date, "time": time, "timezone_offset": tz, "latitude": lat, "longitude": lon},
+        "tropical": {"planets": tropical, "ascendant": _position(ascmc[0]), "midheaven": _position(ascmc[1]), "nodes": nodes},
+        "birth_time_sensitivity": _ascendant_sensitivity_data(jd, lat, lon, tz),
+        "sidereal": _sidereal_data(jd, lat, lon),
+        "d10": _d10_data(jd, lat, lon),
+        "astrocartography": {"scope": "MC/IC longitude lines only", "lines": astro},
+    }
+    if solar_year:
+        result["solar_return"] = _solar_return_data(jd, lat, lon, tz, solar_year)
+    return result
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Compute chart data for an Ikigai report.")
     ap.add_argument("--date", required=True, help="birth date, YYYY-MM-DD")
@@ -207,12 +337,16 @@ def main() -> None:
     ap.add_argument("--lat", required=True, type=float, help="latitude, north positive")
     ap.add_argument("--lon", required=True, type=float, help="longitude, east positive")
     ap.add_argument("--solar-year", type=int, help="also compute the solar return for this year")
+    ap.add_argument("--json", action="store_true", help="emit structured JSON instead of a human-readable report")
     args = ap.parse_args()
+
+    if args.json:
+        print(json.dumps(collect_chart(args.date, args.time, args.tz, args.lat, args.lon, args.solar_year), indent=2))
+        return
 
     jd = julian_day(args.date, args.time, args.tz)
     print(f"Birth: {args.date} {args.time} (UTC{args.tz:+g})  "
           f"lat {args.lat}  lon {args.lon}")
-
     natal(jd, args.lat, args.lon)
     ascendant_sensitivity(jd, args.lat, args.lon, args.tz)
     sidereal(jd, args.lat, args.lon)

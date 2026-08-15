@@ -123,6 +123,18 @@ def test_extended_pure() -> None:
         check(f"matrix: reduce_to_22({n_in}) -> {want}", ex.reduce_to_22(n_in), want)
 
 
+def test_generator_pure() -> None:
+    import generate_report as generator
+
+    numbers = generator.calculate_numerology("Test Person", "1990-01-15", 2026, None)
+    check("generator: Life Path rendered", numbers["life_path"]["display"], "8")
+    check("generator: Personal Year rendered", numbers["personal_year"]["display"], "8")
+    check("generator: no Arabic name omits Abjad", "abjad" in numbers, False)
+    check("generator: master-number display", generator.display_reduction(38), "11/2")
+    check("generator: standard tests include WDQ", any(item["key"] == "wdq" for item in generator.TEST_CATALOG), True)
+    check("generator: standard tests include ASRS", any(item["key"] == "asrs" for item in generator.TEST_CATALOG), True)
+
+
 # --------------------------------------------------------------- EPHEM
 def test_chart_ephem() -> None:
     try:
@@ -160,6 +172,12 @@ def test_chart_ephem() -> None:
              170.0, 200.0, 230.0, 260.0, 290.0, 320.0]
     check("chart: house_of wraps past 0 Aries", chart.house_of(5.0, cusps), 1)
     check("chart: house_of mid-chart", chart.house_of(115.0, cusps), 5)
+
+    payload = chart.collect_chart("2000-01-15", "14:30", 0.0, 51.4779, -0.0015, 2026)
+    check("chart: structured payload includes tropical chart", "tropical" in payload, True)
+    check("chart: structured payload includes D10", "d10" in payload, True)
+    check("chart: structured payload includes solar return", "solar_return" in payload, True)
+    check("chart: structured payload has formatted Ascendant", "formatted" in payload["tropical"]["ascendant"], True)
 
 
 def test_extended_ephem() -> None:
@@ -261,8 +279,8 @@ def report_known_issues() -> None:
 
 
 def main() -> int:
-    for fn in (test_numerology, test_extended_pure, test_chart_ephem,
-               test_extended_ephem, test_dasha):
+    for fn in (test_numerology, test_extended_pure, test_generator_pure,
+               test_chart_ephem, test_extended_ephem, test_dasha):
         try:
             fn()
         except Exception as exc:  # a crash is a failure, not an excuse
