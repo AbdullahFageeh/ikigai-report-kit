@@ -75,6 +75,12 @@ def test_numerology() -> None:
     # Alef variants normalise to the plain alef.
     check("numerology: abjad normalises أ -> ا", n.ABJAD_NORMALISE["أ"], "ا")
 
+    pinnacle = n.pinnacles_and_challenges("1986-07-06")
+    check("numerology: Pinnacle 1 for 1986-07-06", pinnacle["cycles"][0]["pinnacle"], "4")
+    check("numerology: Challenge 1 for 1986-07-06", pinnacle["cycles"][0]["challenge"], 1)
+    check("numerology: Pinnacle 3 for 1986-07-06", pinnacle["cycles"][2]["pinnacle"], "7")
+    check("numerology: fourth Pinnacle is open-ended", pinnacle["cycles"][3]["end_age"], None)
+
 
 def test_extended_pure() -> None:
     import extended_systems as ex
@@ -138,6 +144,7 @@ def test_generator_pure() -> None:
     check("generator: Life Path rendered", numbers["life_path"]["display"], "8")
     check("generator: Personal Year rendered", numbers["personal_year"]["display"], "8")
     check("generator: no Arabic name omits Abjad", "abjad" in numbers, False)
+    check("generator: Pinnacles included", "pinnacles_challenges" in numbers, True)
     check("generator: master-number display", generator.display_reduction(38), "11/2")
     check("generator: standard tests include WDQ", any(item["key"] == "wdq" for item in generator.TEST_CATALOG), True)
     check("generator: standard tests include ASRS", any(item["key"] == "asrs" for item in generator.TEST_CATALOG), True)
@@ -195,6 +202,9 @@ def test_chart_ephem() -> None:
 
     payload = chart.collect_chart("2000-01-15", "14:30", 0.0, 51.4779, -0.0015, 2026)
     check("chart: structured payload includes tropical chart", "tropical" in payload, True)
+    check("chart: structured payload includes Panchanga", "panchanga" in payload, True)
+    check("chart: Panchanga has five limbs", set(payload["panchanga"]) >= {"vara", "tithi", "nakshatra", "yoga", "karana"}, True)
+    check("chart: Panchanga Tithi range", 1 <= payload["panchanga"]["tithi"]["number"] <= 15, True)
     check("chart: structured payload includes D9", "d9" in payload, True)
     check("chart: structured payload includes D10", "d10" in payload, True)
     check("chart: structured payload includes solar return", "solar_return" in payload, True)

@@ -140,9 +140,15 @@ def calculate_numerology(name_en: str, birth_date: str, year: int, name_ar: str 
         total = sum(num.PYTHAGOREAN[char] for char in chars)
         return {"total": total, "display": display_reduction(total)}
 
+    pinnacle_data = num.pinnacles_and_challenges(birth_date)
+    active_cycle = next(
+        (cycle for cycle in pinnacle_data["cycles"] if cycle["start_year"] <= year and (cycle["end_year"] is None or year <= cycle["end_year"])),
+        pinnacle_data["cycles"][-1],
+    )
     result: dict[str, Any] = {
         "life_path": {"total": life_total, "display": display_reduction(life_total)},
         "personal_year": {"year": year, "total": personal_total, "display": display_reduction(personal_total)},
+        "pinnacles_challenges": {**pinnacle_data, "active_cycle": active_cycle},
         "name": {
             "expression": name_number(letters),
             "soul_urge": name_number([char for char in letters if char in num.VOWELS]),
@@ -316,6 +322,7 @@ def calculated_rows(calculations: dict[str, Any]) -> list[tuple[str, str, str]]:
     rows: list[tuple[str, str, str]] = [
         ("Numerology — Life Path", numerology["life_path"]["display"], "Calculated from birth date; symbolic reflection."),
         ("Numerology — Personal Year", f"{numerology['personal_year']['display']} ({numerology['personal_year']['year']})", "Calculated from birth month, day and the report year; symbolic reflection."),
+        ("Numerology — Pinnacles & Challenges", "; ".join(f"P{index} {cycle['pinnacle']} / C{cycle['challenge']}" for index, cycle in enumerate(numerology['pinnacles_challenges']['cycles'], start=1)), f"Current report-year cycle: P{numerology['pinnacles_challenges']['active_cycle']['pinnacle']} / C{numerology['pinnacles_challenges']['active_cycle']['challenge']}; symbolic reflection."),
         ("Numerology — Expression / Soul / Personality", f"{numerology['name']['expression']['display']} / {numerology['name']['soul_urge']['display']} / {numerology['name']['personality']['display']}", "Calculated from the supplied Latin-script name; symbolic reflection."),
     ]
     if "abjad" in numerology:
@@ -328,6 +335,7 @@ def calculated_rows(calculations: dict[str, Any]) -> list[tuple[str, str, str]]:
             ("Western astrology", f"Sun {tropical['planets']['Sun']['formatted']}; Moon {tropical['planets']['Moon']['formatted']}; ASC {tropical['ascendant']['formatted']}; MC {tropical['midheaven']['formatted']}", "Calculated from birth date, local time and coordinates; symbolic reflection."),
             ("Nodal axis", f"North Node {tropical['nodes']['north']['formatted']} (House {tropical['nodes']['north']['house']}); South Node {tropical['nodes']['south']['formatted']} (House {tropical['nodes']['south']['house']})", "Calculated chart position; symbolic reflection."),
             ("Vedic astrology", f"Sidereal ASC {chart['sidereal']['ascendant']['formatted']}; Moon {chart['sidereal']['planets']['Moon']['nakshatra']} pada {chart['sidereal']['planets']['Moon']['pada']}", "Lahiri ayanamsa; symbolic reflection."),
+            ("Vedic Panchanga", f"{chart['panchanga']['vara']}; {chart['panchanga']['tithi']['paksha']} {chart['panchanga']['tithi']['name']} ({chart['panchanga']['tithi']['number']}); {chart['panchanga']['nakshatra']['name']}; {chart['panchanga']['yoga']['name']}; {chart['panchanga']['karana']}", "Instantaneous natal five-limb Panchanga using Lahiri positions; not a sunrise-based almanac."),
             ("Vedic D9 (Navamsa)", f"D9 lagna {chart['d9']['lagna']}; 9th-house sign {chart['d9']['ninth_house_sign']}", "Lahiri ninth-division chart; symbolic reflection."),
             ("Vedic D10 (career chart)", f"D10 lagna {chart['d10']['lagna']}; 10th-house sign {chart['d10']['tenth_house_sign']}", "Lahiri career divisional-chart data; symbolic reflection."),
             ("Solar return", f"{chart['solar_return']['exact_return_local']}; ASC {chart['solar_return']['ascendant']['formatted']}; MC {chart['solar_return']['midheaven']['formatted']}", "Calculated for the report year; symbolic reflection."),
@@ -431,10 +439,14 @@ This report is a reproducible calculation record built from the supplied name, d
         header += "Birth-time sensitivity could not be calculated in this run; see the calculation status below.\n\n"
 
     detail_rows: list[tuple[str, str]] = []
+    pinnacle_cycles = calculations["numerology"]["pinnacles_challenges"]["cycles"]
+    detail_rows.append(("Numerology Pinnacles & Challenges", "; ".join(f"P{index} {cycle['pinnacle']} / C{cycle['challenge']}, ages {cycle['start_age']}–{cycle['end_age'] if cycle['end_age'] is not None else '∞'} ({cycle['start_year']}–{cycle['end_year'] if cycle['end_year'] is not None else 'onward'})" for index, cycle in enumerate(pinnacle_cycles, start=1))))
     chart = calculations.get("chart")
     if chart:
         detail_rows.append(("Tropical chart", "; ".join(f"{name} {value['formatted']}" for name, value in chart['tropical']['planets'].items() if value.get('available', True))))
         detail_rows.append(("Sidereal Moon", f"{chart['sidereal']['planets']['Moon']['formatted']} · {chart['sidereal']['planets']['Moon']['nakshatra']} pada {chart['sidereal']['planets']['Moon']['pada']}"))
+        panchanga = chart["panchanga"]
+        detail_rows.append(("Vedic Panchanga", f"Vara {panchanga['vara']}; Tithi {panchanga['tithi']['paksha']} {panchanga['tithi']['name']} #{panchanga['tithi']['number']}; Nakshatra {panchanga['nakshatra']['name']} #{panchanga['nakshatra']['index']}; Yoga {panchanga['yoga']['name']} #{panchanga['yoga']['index']}; Karana {panchanga['karana']}"))
         detail_rows.append(("D9 Navamsa chart", "; ".join(f"{name} {value['sign']} house {value['house']}" for name, value in chart['d9']['planets'].items())))
         detail_rows.append(("D10 career chart", "; ".join(f"{name} {value['sign']} house {value['house']}" for name, value in chart['d10']['planets'].items())))
         detail_rows.append(("Astrocartography", "; ".join(f"{name}: MC {values['mc_longitude']:+.1f}°, IC {values['ic_longitude']:+.1f}°" for name, values in chart['astrocartography']['lines'].items())))

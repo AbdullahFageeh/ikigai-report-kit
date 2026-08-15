@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime
 
 try:
     import swisseph as swe
@@ -34,12 +35,23 @@ SIGNS = [
 ]
 
 NAKSHATRAS = [
-    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra",
-    "Punarvasu", "Pushya", "Ashlesha", "Magha", "P.Phalguni", "U.Phalguni",
+    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "P.Phalguni", "U.Phalguni",
     "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula",
     "P.Ashadha", "U.Ashadha", "Shravana", "Dhanishta", "Shatabhisha",
-    "P.Bhadrapada", "U.Bhadrapada", "Revati",
+    "P.Bhadrapada", "U.Phadrapada", "Revati",
 ]
+
+TITHIS = [
+    "Pratipada", "Dwitiya", "Tritiya", "Chaturthi", "Panchami", "Shashthi", "Saptami", "Ashtami", "Navami", "Dashami", "Ekadashi", "Dwadashi", "Trayodashi", "Chaturdashi", "Purnima",
+]
+
+YOGAS = [
+    "Vishkambha", "Priti", "Ayushman", "Saubhagya", "Shobhana", "Atiganda", "Sukarma", "Dhriti", "Shoola", "Ganda", "Vriddhi", "Dhruva", "Vyaghata", "Harshana", "Vajra", "Siddhi", "Vyatipata", "Variyana", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti",
+]
+
+MOVABLE_KARANAS = ["Bava", "Balava", "Kaulava", "Taitila", "Garija", "Vanija", "Vishti"]
+
+
 
 PLANETS = [
     ("Sun", swe.SUN), ("Moon", swe.MOON), ("Mercury", swe.MERCURY),
@@ -271,6 +283,47 @@ def _d10_data(jd: float, lat: float, lon: float) -> dict:
     return {"lagna": SIGNS[lagna], "tenth_house_sign": SIGNS[(lagna + 9) % 12], "planets": planets}
 
 
+def _panchanga_data(jd: float, date_str: str) -> dict:
+    """Calculate the five Panchanga limbs at the supplied local birth moment.
+
+    Tithi and Karana use Sun–Moon angular separation. Nakshatra and Yoga use
+    Lahiri sidereal longitudes. Vara is the local Gregorian weekday of the
+    supplied birth date. This is an instantaneous natal calculation, not a
+    sunrise-based regional almanac.
+    """
+    swe.set_sid_mode(swe.SIDM_LAHIRI)
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+    sun = swe.calc_ut(jd, swe.SUN, flags)[0][0]
+    moon = swe.calc_ut(jd, swe.MOON, flags)[0][0]
+    elongation = (moon - sun) % 360
+    tithi_index = int(elongation / 12)
+    paksha = "Shukla" if tithi_index < 15 else "Krishna"
+    tithi_number = (tithi_index % 15) + 1
+    tithi_name = "Amavasya" if tithi_index == 29 else TITHIS[tithi_index % 15]
+    nakshatra_index = int(moon / (360 / 27))
+    yoga_index = int(((sun + moon) % 360) / (360 / 27))
+    karana_half_index = int(elongation / 6)
+    if karana_half_index == 0:
+        karana = "Kimstughna"
+    elif karana_half_index <= 56:
+        karana = MOVABLE_KARANAS[(karana_half_index - 1) % len(MOVABLE_KARANAS)]
+    elif karana_half_index == 57:
+        karana = "Shakuni"
+    elif karana_half_index == 58:
+        karana = "Chatushpada"
+    else:
+        karana = "Naga"
+    weekday = datetime.fromisoformat(date_str).strftime("%A")
+    return {
+        "method": "Lahiri sidereal longitudes; instantaneous natal Panchanga, not sunrise-based almanac",
+        "vara": weekday,
+        "tithi": {"paksha": paksha, "number": tithi_number, "name": tithi_name, "elongation_degrees": round(elongation, 6)},
+        "nakshatra": {"name": NAKSHATRAS[nakshatra_index], "index": nakshatra_index + 1, "moon_longitude": round(moon, 6)},
+        "yoga": {"name": YOGAS[yoga_index], "index": yoga_index + 1},
+        "karana": karana,
+    }
+
+
 def _d9_data(jd: float, lat: float, lon: float) -> dict:
     """Return the Lahiri Navamsa D9 divisional chart as signs and whole-sign houses."""
     swe.set_sid_mode(swe.SIDM_LAHIRI)
@@ -351,6 +404,7 @@ def collect_chart(date: str, time: str, tz: float, lat: float, lon: float, solar
         "tropical": {"planets": tropical, "ascendant": _position(ascmc[0]), "midheaven": _position(ascmc[1]), "nodes": nodes},
         "birth_time_sensitivity": _ascendant_sensitivity_data(jd, lat, lon, tz),
         "sidereal": _sidereal_data(jd, lat, lon),
+        "panchanga": _panchanga_data(jd, date),
         "d10": _d10_data(jd, lat, lon),
         "d9": _d9_data(jd, lat, lon),
         "astrocartography": {"scope": "MC/IC longitude lines only", "lines": astro},
