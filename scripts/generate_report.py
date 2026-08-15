@@ -328,7 +328,8 @@ def calculated_rows(calculations: dict[str, Any]) -> list[tuple[str, str, str]]:
             ("Western astrology", f"Sun {tropical['planets']['Sun']['formatted']}; Moon {tropical['planets']['Moon']['formatted']}; ASC {tropical['ascendant']['formatted']}; MC {tropical['midheaven']['formatted']}", "Calculated from birth date, local time and coordinates; symbolic reflection."),
             ("Nodal axis", f"North Node {tropical['nodes']['north']['formatted']} (House {tropical['nodes']['north']['house']}); South Node {tropical['nodes']['south']['formatted']} (House {tropical['nodes']['south']['house']})", "Calculated chart position; symbolic reflection."),
             ("Vedic astrology", f"Sidereal ASC {chart['sidereal']['ascendant']['formatted']}; Moon {chart['sidereal']['planets']['Moon']['nakshatra']} pada {chart['sidereal']['planets']['Moon']['pada']}", "Lahiri ayanamsa; symbolic reflection."),
-            ("Vedic D10 (career chart)", f"D10 lagna {chart['d10']['lagna']}; 10th-house sign {chart['d10']['tenth_house_sign']}", "Calculated divisional-chart data; symbolic reflection."),
+            ("Vedic D9 (Navamsa)", f"D9 lagna {chart['d9']['lagna']}; 9th-house sign {chart['d9']['ninth_house_sign']}", "Lahiri ninth-division chart; symbolic reflection."),
+            ("Vedic D10 (career chart)", f"D10 lagna {chart['d10']['lagna']}; 10th-house sign {chart['d10']['tenth_house_sign']}", "Lahiri career divisional-chart data; symbolic reflection."),
             ("Solar return", f"{chart['solar_return']['exact_return_local']}; ASC {chart['solar_return']['ascendant']['formatted']}; MC {chart['solar_return']['midheaven']['formatted']}", "Calculated for the report year; symbolic reflection."),
             ("Astrocartography", "MC/IC longitudes generated for Sun, Moon, Mercury, Venus, Mars, Jupiter and Saturn", "MC/IC lines only; Ascendant/Descendant curves need a mapping tool."),
         ])
@@ -339,7 +340,9 @@ def calculated_rows(calculations: dict[str, Any]) -> list[tuple[str, str, str]]:
         rows.extend([
             ("Chinese zodiac / BaZi", f"{bazi['zodiac_animal']}; {p['year']['stem']['name']} {p['year']['branch']['name']} / {p['month']['stem']['name']} {p['month']['branch']['name']} / {p['day']['stem']['name']} {p['day']['branch']['name']} / {p['hour']['stem']['name']} {p['hour']['branch']['name']}", "Deterministic implementation; see limitations for the day-pillar anchor."),
             ("Human Design", f"{extended['human_design']['type']} · {extended['human_design']['profile']} · {extended['human_design']['authority']}", "Computed from the implemented gate/channel model; symbolic reflection."),
-            ("Gene Keys", f"Life's Work {extended['gene_keys']['activation_sequence']['life_work']}; Evolution {extended['gene_keys']['activation_sequence']['evolution']}; Radiance {extended['gene_keys']['activation_sequence']['radiance']}; Purpose {extended['gene_keys']['activation_sequence']['purpose']}", "Direct gate-to-Gene-Key mapping; symbolic reflection."),
+            ("Gene Keys — Activation", f"Life's Work {extended['gene_keys']['activation_sequence']['life_work']}; Evolution {extended['gene_keys']['activation_sequence']['evolution']}; Radiance {extended['gene_keys']['activation_sequence']['radiance']}; Purpose {extended['gene_keys']['activation_sequence']['purpose']}", "Direct gate-to-Gene-Key mapping; symbolic reflection."),
+            ("Gene Keys — Venus & Pearl", f"Attraction {extended['gene_keys']['venus_sequence']['attraction']}; Core/Vocation {extended['gene_keys']['venus_sequence']['core']}; Culture {extended['gene_keys']['pearl_sequence']['culture']}; Pearl {extended['gene_keys']['pearl_sequence']['pearl']}", "Full Golden Path sphere mapping; coordinates only, not interpretive prose."),
+            ("Gene Keys — Star Pearl", f"Creativity {extended['gene_keys']['star_pearl_sequence']['creativity']}; Relating {extended['gene_keys']['star_pearl_sequence']['relating']}; Stability {extended['gene_keys']['star_pearl_sequence']['stability']}", "Extended sphere mapping; coordinates only, not interpretive prose."),
             ("Destiny Matrix", f"Day {extended['destiny_matrix']['core']['day_arcana']}; Month {extended['destiny_matrix']['core']['month_arcana']}; Year {extended['destiny_matrix']['core']['year_arcana']}; Destiny {extended['destiny_matrix']['core']['destiny_arcana']}", "Deterministic Matrix of Destiny 22 reduction; symbolic reflection."),
         ])
     dasha = calculations.get("dasha")
@@ -432,11 +435,13 @@ This report is a reproducible calculation record built from the supplied name, d
     if chart:
         detail_rows.append(("Tropical chart", "; ".join(f"{name} {value['formatted']}" for name, value in chart['tropical']['planets'].items() if value.get('available', True))))
         detail_rows.append(("Sidereal Moon", f"{chart['sidereal']['planets']['Moon']['formatted']} · {chart['sidereal']['planets']['Moon']['nakshatra']} pada {chart['sidereal']['planets']['Moon']['pada']}"))
+        detail_rows.append(("D9 Navamsa chart", "; ".join(f"{name} {value['sign']} house {value['house']}" for name, value in chart['d9']['planets'].items())))
         detail_rows.append(("D10 career chart", "; ".join(f"{name} {value['sign']} house {value['house']}" for name, value in chart['d10']['planets'].items())))
         detail_rows.append(("Astrocartography", "; ".join(f"{name}: MC {values['mc_longitude']:+.1f}°, IC {values['ic_longitude']:+.1f}°" for name, values in chart['astrocartography']['lines'].items())))
     extended = calculations.get("extended")
     if extended:
         detail_rows.append(("Human Design", f"Strategy: {extended['human_design']['strategy']}; defined centres: {', '.join(extended['human_design']['defined_centers']) or 'none'}; defined channels: {', '.join(extended['human_design']['defined_channels']) or 'none'}"))
+        detail_rows.append(("Gene Keys Golden Path", f"Venus: Attraction {extended['gene_keys']['venus_sequence']['attraction']}, IQ {extended['gene_keys']['venus_sequence']['iq']}, EQ {extended['gene_keys']['venus_sequence']['eq']}, SQ {extended['gene_keys']['venus_sequence']['sq']}, Core {extended['gene_keys']['venus_sequence']['core']}; Pearl: Culture {extended['gene_keys']['pearl_sequence']['culture']}, Pearl {extended['gene_keys']['pearl_sequence']['pearl']}"))
         detail_rows.append(("BaZi", json.dumps(extended['bazi']['pillars'], ensure_ascii=False).replace('"', '')))
     if calculations.get("dasha"):
         detail_rows.append(("Dasha as of generation", json.dumps(calculations['dasha']['mahadasha'], ensure_ascii=False).replace('"', '')))

@@ -34,10 +34,10 @@ Add `--name-ar "اسم عربي كامل"` when an Arabic-script name is availab
 |---|---|---|
 | Birth date + name | Life Path, Personal Year, Expression, Soul Urge and Personality numbers; Abjad when Arabic name is supplied | Symbolic, reproducible calculation |
 | Birth date + time + place | Tropical natal positions, Ascendant, Midheaven, lunar nodes, birth-time sensitivity, solar return and MC/IC astrocartography lines | Symbolic, reproducible calculation |
-| Birth date + time + place | Sidereal Lahiri positions and nakshatra/pada, D10 career-chart positions, Vimshottari dasha timing | Symbolic, reproducible calculation |
-| Birth date + time | Chinese zodiac, BaZi pillars, Human Design type/profile/centres/channels, Gene Keys Activation Sequence, Destiny Matrix 22 reduction | Symbolic, reproducible calculation |
+| Birth date + time + place | Sidereal Lahiri positions and nakshatra/pada, Navamsa D9, D10 career-chart positions, Vimshottari dasha timing | Symbolic, reproducible calculation |
+| Birth date + time | Chinese zodiac, BaZi pillars, Human Design type/profile/centres/channels, full Gene Keys Golden Path sphere coordinates, Destiny Matrix 22 reduction | Symbolic, reproducible calculation |
 
-The generator contains all the systems the current code can calculate. It does **not** pretend to calculate systems that are not implemented, such as Mayan Tzolkin, Nine Star Ki, full Ascendant/Descendant astrocartography curves, a full Gene Keys Golden Path, or professionally administered psychological assessments.
+The generator contains all the systems the current code can calculate. It does **not** pretend to calculate systems that are not implemented, such as Mayan Tzolkin, Nine Star Ki, full Ascendant/Descendant astrocartography curves, a full Gene Keys interpretive text library, or professionally administered psychological assessments.
 
 ## What is optional: real test results
 
@@ -109,6 +109,8 @@ Technical constraints currently documented in the code still apply:
 - The BaZi day-pillar anchor is deterministic but needs independent validation before high-stakes use.
 - The dasha module uses True Chitra Paksha while the chart module’s sidereal output uses Lahiri, so boundary values may differ slightly.
 - MC/IC astrocartography lines are calculated; Ascendant/Descendant curves need a dedicated mapping implementation.
+- Gene Keys outputs are calculated sphere coordinates from the official natal/design activation mapping; the kit does not reproduce proprietary interpretive prose. The mapping source is documented in [`docs/expansion-research.md`](docs/expansion-research.md).
+- Navamsa D9 uses the same Lahiri sidereal convention as the kit’s existing D10 implementation and remains a symbolic divisional-chart output.
 
 ## Developer commands
 
@@ -131,9 +133,9 @@ Technical constraints currently documented in the code still apply:
 | Path | Role |
 |---|---|
 | `scripts/generate_report.py` | Universal generator: input resolution, calculations, optional test-results logic and report rendering |
-| `scripts/chart.py` | Western/Vedic chart, D10, solar return, astrocartography; now also supports `--json` |
+| `scripts/chart.py` | Western/Vedic chart, Navamsa D9, D10, solar return and astrocartography; also supports `--json` |
 | `scripts/dasha.py` | Current Vimshottari mahadasha and antardasha timing |
-| `scripts/extended_systems.py` | BaZi, Human Design, Gene Keys Activation Sequence and Destiny Matrix |
+| `scripts/extended_systems.py` | BaZi, Human Design, full Gene Keys Golden Path sphere coordinates and Destiny Matrix |
 | `scripts/numerology.py` | Life Path, Pythagorean name figures and Arabic Abjad |
 | `template/report-template.md` | Long-form human-authored report template for an expanded, curated report |
 | `template/v7-measurement-layer.md` | Optional V7 measurement section for reports with completed WDQ, HEXACO, ASRS and CBI data |

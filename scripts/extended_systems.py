@@ -494,20 +494,49 @@ def calculate_human_design(date_str: str, time_str: str, tz: float) -> dict:
 
 
 def calculate_gene_keys(hd: dict) -> dict:
+    """Calculate the Golden Path spheres from Human Design activations.
+
+    This is a deterministic gate-and-line mapping. It deliberately returns only
+    the sphere coordinates, not copyrighted Gene Keys prose or claims about a
+    person's character, health, relationships, or future.
+    """
     p = hd["personality"]
     d = hd["design"]
 
     def key(activation: dict) -> str:
         return f"{activation['gate']}.{activation['line']}"
 
+    activation = {
+        "life_work": key(p["Sun"]),
+        "evolution": key(p["Earth"]),
+        "radiance": key(d["Sun"]),
+        "purpose": key(d["Earth"]),
+    }
+    venus = {
+        "attraction": key(d["Moon"]),
+        "iq": key(p["Venus"]),
+        "eq": key(p["Mars"]),
+        "sq": key(d["Venus"]),
+        "core": key(d["Mars"]),
+    }
+    pearl = {
+        "vocation": key(d["Mars"]),
+        "culture": key(d["Jupiter"]),
+        "brand": key(p["Sun"]),
+        "pearl": key(p["Jupiter"]),
+    }
+    star_pearl = {
+        "creativity": key(d["Uranus"]),
+        "relating": key(p["Mercury"]),
+        "stability": key(d["Saturn"]),
+    }
     return {
         "method": "Direct mapping: Gene Key number = Human Design gate number",
-        "activation_sequence": {
-            "life_work": key(p["Sun"]),
-            "evolution": key(p["Earth"]),
-            "radiance": key(d["Sun"]),
-            "purpose": key(d["Earth"]),
-        },
+        "source": "https://genekeys.com/docs/what-planets-does-each-sphere-of-the-golden-path-profile-correlate-to/",
+        "activation_sequence": activation,
+        "venus_sequence": venus,
+        "pearl_sequence": pearl,
+        "star_pearl_sequence": star_pearl,
     }
 
 

@@ -75,6 +75,18 @@ def d10_sign(longitude: float) -> int:
     return (start + division) % 12
 
 
+def d9_sign(longitude: float) -> int:
+    """Navamsa: divide each sign into nine 3°20' portions.
+
+    The compact formula produces the standard movable/fixed/dual starting-sign
+    convention: start from the sign itself, ninth sign, or fifth sign,
+    respectively.
+    """
+    sign_index = int((longitude % 360) // 30)
+    division = int(((longitude % 30) / (30 / 9)))
+    return (sign_index * 9 + division) % 12
+
+
 def julian_day(date: str, time: str, tz: float) -> float:
     year, month, day = (int(x) for x in date.split("-"))
     hour, minute = (int(x) for x in time.split(":"))
@@ -259,6 +271,25 @@ def _d10_data(jd: float, lat: float, lon: float) -> dict:
     return {"lagna": SIGNS[lagna], "tenth_house_sign": SIGNS[(lagna + 9) % 12], "planets": planets}
 
 
+def _d9_data(jd: float, lat: float, lon: float) -> dict:
+    """Return the Lahiri Navamsa D9 divisional chart as signs and whole-sign houses."""
+    swe.set_sid_mode(swe.SIDM_LAHIRI)
+    flags = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+    _, ascmc = swe.houses_ex(jd, lat, lon, b"P", swe.FLG_SIDEREAL)
+    lagna = d9_sign(ascmc[0])
+    planets = {}
+    for name, code in PLANETS[:7] + [("Rahu", swe.TRUE_NODE)]:
+        pos, _ = swe.calc_ut(jd, code, flags)
+        sign = d9_sign(pos[0])
+        planets[name] = {"sign": SIGNS[sign], "house": ((sign - lagna) % 12) + 1}
+    return {
+        "division": "Navamsa D9 (ninth subdivision of each sidereal sign)",
+        "lagna": SIGNS[lagna],
+        "ninth_house_sign": SIGNS[(lagna + 8) % 12],
+        "planets": planets,
+    }
+
+
 def _solar_return_data(jd: float, lat: float, lon: float, tz: float, year: int) -> dict:
     natal_sun = swe.calc_ut(jd, swe.SUN)[0][0]
     _, month, day, _ = swe.revjul(jd)
@@ -321,6 +352,7 @@ def collect_chart(date: str, time: str, tz: float, lat: float, lon: float, solar
         "birth_time_sensitivity": _ascendant_sensitivity_data(jd, lat, lon, tz),
         "sidereal": _sidereal_data(jd, lat, lon),
         "d10": _d10_data(jd, lat, lon),
+        "d9": _d9_data(jd, lat, lon),
         "astrocartography": {"scope": "MC/IC longitude lines only", "lines": astro},
     }
     if solar_year:

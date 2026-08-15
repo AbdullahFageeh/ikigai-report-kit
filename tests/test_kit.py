@@ -122,6 +122,14 @@ def test_extended_pure() -> None:
     for n_in, want in ((18, 18), (22, 22), (23, 5), (47, 11), (1993, 22)):
         check(f"matrix: reduce_to_22({n_in}) -> {want}", ex.reduce_to_22(n_in), want)
 
+    # Full Gene Keys mapping uses existing natal/personality and design activations.
+    personality = {name: {"gate": index + 1, "line": 1} for index, name in enumerate(ex.HD_PLANET_ORDER)}
+    design = {name: {"gate": index + 1, "line": 2} for index, name in enumerate(ex.HD_PLANET_ORDER)}
+    keys = ex.calculate_gene_keys({"personality": personality, "design": design})
+    check("gene keys: Venus attraction uses design Moon", keys["venus_sequence"]["attraction"], "5.2")
+    check("gene keys: Pearl uses natal Jupiter", keys["pearl_sequence"]["pearl"], "9.1")
+    check("gene keys: Star Pearl creativity uses design Uranus", keys["star_pearl_sequence"]["creativity"], "11.2")
+
 
 def test_generator_pure() -> None:
     import generate_report as generator
@@ -172,6 +180,12 @@ def test_chart_ephem() -> None:
     check("chart: d10 Aries 3° -> Taurus", chart.d10_sign(3.0), 1)
     # Even signs (Taurus=index 1) count from the 9th sign.
     check("chart: d10 Taurus 0° -> Capricorn", chart.d10_sign(30.0), 9)
+    # Navamsa: cardinal signs begin from themselves, fixed signs from the ninth,
+    # and dual signs from the fifth.
+    check("chart: d9 Aries 0° -> Aries", chart.d9_sign(0.0), 0)
+    check("chart: d9 Aries 3°20' -> Taurus", chart.d9_sign(30 / 9), 1)
+    check("chart: d9 Taurus 0° -> Capricorn", chart.d9_sign(30.0), 9)
+    check("chart: d9 Gemini 0° -> Libra", chart.d9_sign(60.0), 6)
 
     # Houses wrap correctly across 0° Aries.
     cusps = [350.0, 20.0, 50.0, 80.0, 110.0, 140.0,
@@ -181,6 +195,7 @@ def test_chart_ephem() -> None:
 
     payload = chart.collect_chart("2000-01-15", "14:30", 0.0, 51.4779, -0.0015, 2026)
     check("chart: structured payload includes tropical chart", "tropical" in payload, True)
+    check("chart: structured payload includes D9", "d9" in payload, True)
     check("chart: structured payload includes D10", "d10" in payload, True)
     check("chart: structured payload includes solar return", "solar_return" in payload, True)
     check("chart: structured payload has formatted Ascendant", "formatted" in payload["tropical"]["ascendant"], True)
