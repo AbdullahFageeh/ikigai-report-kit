@@ -134,6 +134,12 @@ def test_generator_pure() -> None:
     check("generator: standard tests include WDQ", any(item["key"] == "wdq" for item in generator.TEST_CATALOG), True)
     check("generator: standard tests include ASRS", any(item["key"] == "asrs" for item in generator.TEST_CATALOG), True)
 
+    args = type("Args", (), {"date": "1990-01-15", "time": "14:30", "solar_year": 2026})()
+    location = {"display_name": "Greenwich", "latitude": 51.4779, "longitude": -0.0015, "timezone": "Europe/London", "utc_offset_hours": 0.0}
+    rendered = generator.render_report("Test Person", None, args, location, {"numerology": numbers}, [], {})
+    check("generator: reproduce command is populated", '--name "Test Person"' in rendered, True)
+    check("generator: reproduce command has no placeholders", "{name_en}" in rendered, False)
+
 
 # --------------------------------------------------------------- EPHEM
 def test_chart_ephem() -> None:

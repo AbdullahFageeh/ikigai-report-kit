@@ -454,14 +454,14 @@ This report is a reproducible calculation record built from the supplied name, d
     else:
         header += "All core measurement links in this version have a supplied result. Retain the original results separately and repeat only when a decision or a seasonal change makes a new baseline useful.\n"
 
-    header += '''
+    header += f'''
 
-# 5. Calculation status and limitations {.newpage}
+# 5. Calculation status and limitations {{.newpage}}
 
 '''
     if warnings:
         header += "## Unavailable in this run\n\n" + "\n".join(f"- {clean_cell(warning)}" for warning in warnings) + "\n\n"
-    header += '''
+    header += f'''
 ## Method boundaries
 
 Psychometrics, vocational-interest instruments and wellbeing screeners measure their own stated constructs when completed; this generator does not recreate them from birth data. Numerology, astrology, Human Design, Gene Keys, BaZi and the Destiny Matrix are included as reproducible reflective systems, not as validated predictors of character, health, future outcomes or career fit.
